@@ -39,9 +39,11 @@ public class Warehouse {
     }
 
     public void remove (UUID id) {
-        for (Product p : new ArrayList<>(products)) {
+        if (id == null) return;
+        for (int i = 0; i < products.size(); i++) {
+            Product p = products.get(i);
             if (p != null && id.equals(p.uuid())) {
-                products.remove(p);
+                products.remove(i);
                 changedProducts.remove(p);
                 break;
             }

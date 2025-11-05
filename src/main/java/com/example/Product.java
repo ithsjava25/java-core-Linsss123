@@ -2,38 +2,50 @@ package com.example;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.UUID;
 
-public class Product{
-    String name;
-    Category category;
-    LocalDate expiryDate;
-    BigDecimal price;
-    boolean perishable;
-    UUID uuid;
-    boolean shippable;
+public abstract class Product {
+    private final UUID uuid;
+    private final String name;
+    private final Category category;
+    private final LocalDate expiryDate; // kan vara null för icke-perishables
+    private BigDecimal price;
+    private final boolean perishable;
+    private final boolean shippable;
 
-    public Product(UUID uuid, String name, Category category, BigDecimal price, LocalDate expiryDate, boolean perishable, boolean shippable) {
-        this.uuid = uuid;
-        this.name = name;
-        this.category = category;
+    public Product(UUID uuid,
+                   String name,
+                   Category category,
+                   BigDecimal price,
+                   LocalDate expiryDate,
+                   boolean perishable,
+                   boolean shippable) {
+        this.uuid = Objects.requireNonNull(uuid, "uuid cannot be null");
+        this.name = Objects.requireNonNull(name, "name cannot be null");
+        this.category = Objects.requireNonNull(category, "category cannot be null");
+        this.price = Objects.requireNonNull(price, "price cannot be null");
         this.expiryDate = expiryDate;
-        this.price = price;
         this.perishable = perishable;
         this.shippable = shippable;
     }
 
-    public String productDetails() {
-        return "";
-    }
+    /**
+     * Subklasser ska returnera en beskrivande sträng, t.ex. "Food: Milk, Expires: 2025-12-24".
+     */
+    public abstract String productDetails();
 
     public UUID uuid() {
-        return this.uuid;
+        return uuid;
     }
 
+    /**
+     * Sätter nytt pris (kan användas av Warehouse.updateProductPrice).
+     */
     public void price(BigDecimal price) {
-        this.price = price;
+        this.price = Objects.requireNonNull(price, "price cannot be null");
     }
+
     public BigDecimal price() {
         return price;
     }
@@ -44,5 +56,17 @@ public class Product{
 
     public Category category() {
         return category;
+    }
+
+    public LocalDate expiryDate() {
+        return expiryDate;
+    }
+
+    public boolean isPerishable() {
+        return perishable;
+    }
+
+    public boolean isShippable() {
+        return shippable;
     }
 }
