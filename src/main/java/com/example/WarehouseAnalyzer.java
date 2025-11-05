@@ -149,18 +149,47 @@ class WarehouseAnalyzer {
         List<Product> products = warehouse.getProducts();
         int n = products.size();
         if (n == 0) return List.of();
-        double sum = products.stream().map(Product::price).mapToDouble(bd -> bd.doubleValue()).sum();
-        double mean = sum / n;
-        double variance = products.stream()
-                .map(Product::price)
-                .mapToDouble(bd -> Math.pow(bd.doubleValue() - mean, 2))
-                .sum() / n;
-        double std = Math.sqrt(variance);
-        double threshold = standardDeviations * std;
+
+        double[] values = products.stream().mapToDouble(p -> p.price().doubleValue()).toArray();
+
+        // Beräkna median
+        double[] sorted = Arrays.copyOf(values, values.length);
+        Arrays.sort(sorted);
+        double median = (sorted.length % 2 == 1)
+                ? sorted[sorted.length / 2]
+                : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2.0;
+
+        // Beräkna MAD = median(|xi - median|)
+        double[] absDeviations = Arrays.stream(values).map(v -> Math.abs(v - median)).toArray();
+        Arrays.sort(absDeviations);
+        double mad = (absDeviations.length % 2 == 1)
+                ? absDeviations[absDeviations.length / 2]
+                : (absDeviations[absDeviations.length / 2 - 1] + absDeviations[absDeviations.length / 2]) / 2.0;
+
+        // Skala MAD för att approx. motsvara standardavvikelse under normalfördelning
+        double scaledMad = mad * 1.4826;
+
+        // Om MAD är 0 (många identiska värden), fallback till vanlig std på alla värden
+        double stdFallback = 0.0;
+        if (scaledMad == 0.0) {
+            double mean = Arrays.stream(values).sum() / values.length;
+            double var = Arrays.stream(values).map(v -> (v - mean) * (v - mean)).sum() / values.length;
+            stdFallback = Math.sqrt(var);
+        }
+
+        double threshold = standardDeviations;
+
         List<Product> outliers = new ArrayList<>();
         for (Product p : products) {
-            double diff = Math.abs(p.price().doubleValue() - mean);
-            if (diff > threshold) outliers.add(p);
+            double v = p.price().doubleValue();
+            double deviation;
+            if (scaledMad > 0.0) {
+                deviation = Math.abs(v - median) / scaledMad;
+            } else {
+                // fallback: använd std från hela dataset
+                deviation = stdFallback > 0.0 ? Math.abs(v - (Arrays.stream(values).sum() / values.length)) / stdFallback : 0.0;
+            }
+            if (deviation >= threshold) outliers.add(p);
         }
         return outliers;
     }
@@ -176,7 +205,8 @@ class WarehouseAnalyzer {
      */
     public List<ShippingGroup> optimizeShippingGroups(BigDecimal maxWeightPerGroup) {
         double maxW = maxWeightPerGroup.doubleValue();
-        List<Shippable> items = warehouse.shippableProducts();
+        // Kopiera till en modifiable lista eftersom warehouse.shippableProducts() returnerar en oföränderlig vy.
+        List<Shippable> items = new ArrayList<>(warehouse.shippableProducts());
         // Sort by descending weight (First-Fit Decreasing)
         items.sort((a, b) -> Double.compare(Objects.requireNonNullElse(b.weight(), 0.0), Objects.requireNonNullElse(a.weight(), 0.0)));
         List<List<Shippable>> bins = new ArrayList<>();
@@ -184,7 +214,11 @@ class WarehouseAnalyzer {
             double w = Objects.requireNonNullElse(item.weight(), 0.0);
             boolean placed = false;
             for (List<Shippable> bin : bins) {
-                double binWeight = bin.stream().map(Shippable::weight).reduce(0.0, Double::sum);
+                // Använd mapToDouble för att hantera null som 0.0 säkert
+                double binWeight = bin.stream()
+                        .map(Shippable::weight)
+                        .mapToDouble(v -> Objects.requireNonNullElse(v, 0.0))
+                        .sum();
                 if (binWeight + w <= maxW) {
                     bin.add(item);
                     placed = true;
