@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public class Product extends Perishable{
+public class Product{
     String name;
     Category category;
     LocalDate expiryDate;
@@ -13,23 +13,18 @@ public class Product extends Perishable{
     UUID uuid;
     boolean shippable;
 
-    public Product(String name, Category category, LocalDate expiryDate, BigDecimal price, boolean perishable, UUID uuid, boolean shippable) {
-        super(LocalDate.now());
+    public Product(UUID uuid, String name, Category category, BigDecimal price, LocalDate expiryDate, boolean perishable, boolean shippable) {
+        this.uuid = uuid;
         this.name = name;
         this.category = category;
         this.expiryDate = expiryDate;
         this.price = price;
         this.perishable = perishable;
-        this.uuid = uuid;
         this.shippable = shippable;
     }
 
-    public Product() {
-        super(LocalDate.now());
-    }
-
-    public boolean productDetails() {
-        return false;
+    public String productDetails() {
+        return "";
     }
 
     public UUID uuid() {

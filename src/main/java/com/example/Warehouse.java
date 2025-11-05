@@ -39,20 +39,22 @@ public class Warehouse {
     }
 
     public void remove (UUID id) {
-        if (id == null) throw new IllegalArgumentException("id cannot be null");
-        boolean removed = false;
-        for (Product p : products) {
+        for (Product p : new ArrayList<>(products)) {
             if (p != null && id.equals(p.uuid())) {
                 products.remove(p);
                 changedProducts.remove(p);
-                removed = true;
                 break;
             }
         }
     }
 
-    public List<Product> getProductsGroupedByCategories() {
-        return List.of();
+    public Map<Category, List<Product>> getProductsGroupedByCategories() {
+        Map<Category, List<Product>> grouped = new HashMap<>();
+        for (Product p : products) {
+            Category cat = p == null ? null : p.category();
+            grouped.computeIfAbsent(cat, k -> new ArrayList<>()).add(p);
+        }
+        return Collections.unmodifiableMap(grouped);
     }
 
     public void updateProductPrice(UUID nonExistentId, BigDecimal newPrice) {
@@ -60,7 +62,7 @@ public class Warehouse {
         boolean updated = false;
         for (Product p : products) {
             if (p != null && nonExistentId.equals(p.uuid())) {
-                p.price(newPrice);
+                p.price(newPrice); // antar att Product har price(BigDecimal) setter
                 changedProducts.add(p);
                 updated = true;
                 break;
@@ -71,8 +73,14 @@ public class Warehouse {
         }
     }
 
-    public List<Product> getProductById(UUID uuid) {
-        return List.of();
+    public Optional<Product> getProductById(UUID uuid) {
+        if (uuid == null) return Optional.empty();
+        for (Product p : products) {
+            if (p != null && uuid.equals(p.uuid())) {
+                return Optional.of(p);
+            }
+        }
+        return Optional.empty();
     }
 
     public List<Perishable> expiredProducts() {
@@ -86,6 +94,12 @@ public class Warehouse {
     }
 
     public List<Shippable> shippableProducts() {
-        return null;
+        List<Shippable> shippables = new ArrayList<>();
+        for (Product p : products) {
+            if (p instanceof Shippable s) {
+                shippables.add(s);
+            }
+        }
+        return Collections.unmodifiableList(shippables);
     }
 }

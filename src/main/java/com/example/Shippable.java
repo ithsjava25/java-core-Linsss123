@@ -2,18 +2,19 @@ package com.example;
 
 import java.math.BigDecimal;
 
-public class Shippable {
-    private final double weight;
+/**
+ * Shippable representerar produkter som kan skickas.
+ * weight() returnerar en Double (kan vara null om okänt).
+ * calculateShippingCost() returnerar BigDecimal så att summor kan reduceras med BigDecimal::add.
+ */
+public interface Shippable {
+    /**
+     * Vikt i kilogram som Double (eller null om okänt).
+     */
+    Double weight();
 
-    public Shippable(double weight) {
-        this.weight = weight;
-    }
-
-    public double weight() {
-        return this.weight;
-    }
-
-    public BigDecimal calculateShippingCost() {
-        return BigDecimal.valueOf(weight);
-    }
+    /**
+     * Beräknad fraktkostnad som BigDecimal.
+     */
+    BigDecimal calculateShippingCost();
 }

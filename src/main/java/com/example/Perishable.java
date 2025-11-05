@@ -2,19 +2,17 @@ package com.example;
 
 import java.time.LocalDate;
 
-public class Perishable extends Shippable{
-    private final LocalDate expiryDate;
+public interface Perishable {
+    /**
+     * Returnerar utgångsdatum för produkten.
+     */
+    LocalDate expirationDate();
 
-    public Perishable(LocalDate expiryDate) {
-        super(1);
-        this.expiryDate = expiryDate;
-    }
-
-    public boolean isExpired() {
-        return false;
-    }
-
-    public LocalDate expirationDate() {
-        return expiryDate;
+    /**
+     * Standardmetod som avgör om produkten är utgången (true om expirationDate < idag).
+     */
+    default boolean isExpired() {
+        LocalDate exp = expirationDate();
+        return exp != null && exp.isBefore(LocalDate.now());
     }
 }
