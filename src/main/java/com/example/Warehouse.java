@@ -61,10 +61,11 @@ public class Warehouse {
 
     public void updateProductPrice(UUID nonExistentId, BigDecimal newPrice) {
         if (nonExistentId == null) throw new IllegalArgumentException("id cannot be null");
+        if (newPrice == null) throw new IllegalArgumentException("price cannot be null");
         boolean updated = false;
         for (Product p : products) {
             if (p != null && nonExistentId.equals(p.uuid())) {
-                p.price(newPrice); // antar att Product har price(BigDecimal) setter
+                p.price(newPrice);
                 changedProducts.add(p);
                 updated = true;
                 break;

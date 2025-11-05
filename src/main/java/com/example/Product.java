@@ -69,4 +69,18 @@ public abstract class Product {
     public boolean isShippable() {
         return shippable;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Product product = (Product) o;
+        return uuid.equals(product.uuid);
+    }
+
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
+    }
 }

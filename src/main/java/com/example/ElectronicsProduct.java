@@ -16,7 +16,7 @@ public class ElectronicsProduct extends Product implements Shippable {
 
     @Override
     public Double weight() {
-        return weight != null ? weight.doubleValue() : 0.0;
+        return weight != null ? weight.doubleValue() : null;
     }
 
     @Override
